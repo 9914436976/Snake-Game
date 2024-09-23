@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jbcode Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            margin: 0;
+            padding: 10px;
+        }
+        canvas {
+            border: 2px solid black;
+            background-color: #fafafa;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:active {
+            background-color: #45a049;
+        }
+        .score {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Jbcode Snake Game</h1>
+    <div class="score">Score: <span id="scoreDisplay">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <div class="controls">
+        <div class="row">
+            <button class="button" onclick="changeDirection(38)">↑</button>
+        </div>
+        <div class="row">
+            <button class="button" onclick="changeDirection(37)">←</button>
+            <button class="button" onclick="changeDirection(39)">→</button>
+        </div>
+        <div class="row">
+            <button class="button" onclick="changeDirection(40)">↓</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const gridSize = 20;
+        let snake = [{ x: 200, y: 200 }];
+        let egg = { x: 100, y: 100 };
+        let dx = gridSize;
+        let dy = 0;
+        let score = 0;
+
+        function drawSnake() {
+            ctx.fillStyle = 'green';
+            snake.forEach((segment, index) => {
+                // Create gradient for the snake segments
+                const gradient = ctx.createLinearGradient(0, 0, gridSize, gridSize);
+                gradient.addColorStop(0, index === 0 ? 'darkgreen' : 'lightgreen');
+                gradient.addColorStop(1, 'green');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(segment.x + gridSize / 2, segment.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'black';
+                ctx.stroke();
+            });
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            snake.unshift(head);
+
+            // Check if snake has eaten the egg
+            if (head.x === egg.x && head.y === egg.y) {
+                score += 10;
+                document.getElementById('scoreDisplay').innerText = score;
+                generateEgg();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateEgg() {
+            egg.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+            egg.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+        }
+
+        function drawEgg() {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(egg.x + gridSize / 2, egg.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function changeDirection(keyCode) {
+            const LEFT_KEY = 37;
+            const UP_KEY = 38;
+            const RIGHT_KEY = 39;
+            const DOWN_KEY = 40;
+
+            if (keyCode === LEFT_KEY && dx === 0) {
+                dx = -gridSize;
+                dy = 0;
+            } else if (keyCode === UP_KEY && dy === 0) {
+                dx = 0;
+                dy = -gridSize;
+            } else if (keyCode === RIGHT_KEY && dx === 0) {
+                dx = gridSize;
+                dy = 0;
+            } else if (keyCode === DOWN_KEY && dy === 0) {
+                dx = 0;
+                dy = gridSize;
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            // Check if snake hits the walls
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                return true;
+            }
+
+            // Check if snake hits itself
+            for (let i = 4; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function gameLoop() {
+            if (checkCollision()) {
+                alert('Game Over! Your score: ' + score);
+                document.location.reload();
+                return;
+            }
+
+            setTimeout(() => {
+                clearCanvas();
+                moveSnake();
+                drawSnake();
+                drawEgg();
+
+                gameLoop();
+            }, 100);
+        }
+
+        document.addEventListener('keydown', (event) => changeDirection(event.keyCode));
+        gameLoop();
+    </script>
+
+</body>
+</html>
